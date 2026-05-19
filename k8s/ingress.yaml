@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: flask-homelab-ingress
+  namespace: devops-homelab
+
+spec:
+  rules:
+  - host: homelab.local
+
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+
+        backend:
+          service:
+            name: flask-homelab-service
+
+            port:
+              number: 80
