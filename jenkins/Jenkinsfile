@@ -4,9 +4,7 @@ pipeline {
     environment {
         REGISTRY = "localhost:5001"
         IMAGE = "flask-homelab"
-        TAG = "${BUILD_NUMBER}"
         NAMESPACE = "devops-homelab"
-        KUBECONFIG = "/var/jenkins_home/.kube/config"
     }
 
     stages {
@@ -18,6 +16,17 @@ pipeline {
             }
         }
 
+        stage('Set Build Tag') {
+            steps {
+                script {
+                    env.TAG = sh(
+                        script: 'git rev-parse --short HEAD',
+                        returnStdout: true
+                    ).trim()
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 sh """
@@ -26,7 +35,7 @@ pipeline {
             }
         }
 
-        stage('Push Image to Registry') {
+        stage('Push Image') {
             steps {
                 sh """
                 docker push $REGISTRY/$IMAGE:$TAG
@@ -34,7 +43,7 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy') {
             steps {
                 sh """
                 kubectl set image deployment/flask-homelab \
@@ -47,7 +56,17 @@ pipeline {
         stage('Verify Rollout') {
             steps {
                 sh """
-                kubectl rollout status deployment/flask-homelab -n $NAMESPACE
+                kubectl rollout status deployment/flask-homelab \
+                -n $NAMESPACE \
+                --timeout=120s
+                """
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sh """
+                kubectl get pods -n $NAMESPACE
                 """
             }
         }
