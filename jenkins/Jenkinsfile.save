@@ -6,7 +6,6 @@ pipeline {
         IMAGE = "flask-homelab"
         TAG = "${BUILD_NUMBER}"
         NAMESPACE = "devops-homelab"
-        KUBECONFIG = "/var/jenkins_home/.kube/config"
     }
 
     stages {
